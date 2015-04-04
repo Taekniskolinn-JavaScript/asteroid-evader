@@ -4,8 +4,10 @@ var app = {
   state: 0,
   score: 0,
   explosion: null,
+  shotFired: false,
 
   EXPLOSION_MAX_TIME: 2,
+  TEXT_MAX_TIME: 1,
   STATE_PLAY: 1,
   STATE_END: 0
 };
@@ -139,13 +141,22 @@ function frameUpdate(timestamp) {
           var dist = Math.sqrt(dx * dx * dy * dy);
 
           if (dist < 50) {
+            app.score += 10;
             app.objects.splice(j, 1);
             app.objects.splice(i - 1, 1);
             spawnExplosion(e, 5, 0.5);
+            spawnText("+10", dt, e);
             spawnRock();
             break;
           }
         }
+      }
+    }
+
+    if (o.type === "text") {
+      o.timer += dt;
+      if (o.timer > app.TEXT_MAX_TIME) {
+        app.objects.splice(i, 1);
       }
     }
 
@@ -241,12 +252,10 @@ function drawScene() {
 
   // draw the explosion
   if (app.explosion) {
-    var interp = app.explosion.timer / app.EXPLOSION_MAX_TIME;
-
     ctx.save();
-      ctx.globalAlpha = 1 - interp;
+      ctx.globalAlpha = 1 - (app.explosion.timer / app.EXPLOSION_MAX_TIME);
       ctx.translate(app.explosion.pos.x, app.explosion.pos.y);
-      ctx.drawImage(app.explosion.image, -app.explosion.size, -app.explosion.size, 150, 150);
+      ctx.drawImage(app.explosion.image, -app.explosion.size/2, -app.explosion.size/2, app.explosion.size*2, app.explosion.size*2);
     ctx.restore();
   }
 
@@ -266,6 +275,12 @@ function drawScene() {
       ctx.arc(o.pos.x, o.pos.y, o.radius, 0, Math.PI * 2, true);
       ctx.fill();
       ctx.closePath();
+    } else if (o.type === "text") {
+      ctx.globalAlpha = 1 - (o.timer / app.TEXT_MAX_TIME);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#00ffff";
+      ctx.font = "20px Calibri";
+      ctx.fillText(o.text, o.pos.x, o.pos.y);
     } else {
       ctx.translate(o.pos.x, o.pos.y);
       ctx.rotate(o.angle);
@@ -290,8 +305,8 @@ function drawScene() {
 function spawnExplosion(relative, speed, volume) {
   app.explosion = {
     timer: 0.1,
-    pos: relative.pos,
-    size: relative.size/2,
+    pos: {x: relative.pos.x - (relative.size/2), y: relative.pos.y - (relative.size/2)},
+    size: relative.size,
     speed: speed || 1,
     image: app.explosionImage
   };
@@ -316,7 +331,23 @@ function spawnStars() {
   }
 }
 
+function spawnText(text, timer, relative) {
+  app.objects.push({
+    type: "text",
+    pos: relative.pos,
+    text: text,
+    timer: timer
+  });
+}
+
 function spawnLaser() {
+  if (app.shotFired) {
+    return;
+  } else {
+    app.shotFired = true;
+    setTimeout(handleShotFiredTimeout, 250);
+  }
+
   app.objects.push({
     type: "laser",
     pos: {x:app.hero.pos.x, y:app.hero.pos.y - 60},
@@ -414,6 +445,10 @@ function handleDocumentKeypress(e) {
       spawnLaser();
     }
   }
+}
+
+function handleShotFiredTimeout() {
+  app.shotFired = false;
 }
 
 })();
