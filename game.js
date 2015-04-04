@@ -11,7 +11,8 @@ var app = {
   state: 0,
   score: 0,
   difficulty: 0,
-  shotFired: false
+  shotFired: false,
+  gameEnded: false
 };
 
 //------------------------------
@@ -52,6 +53,7 @@ var app = {
   // register events
   canvas.addEventListener("mousemove", handleMouseMove, false);
   window.addEventListener("resize", handleWindowResize, false);
+  document.addEventListener("keyup", handleDocumentKeyup, false);
   document.addEventListener("keypress", handleDocumentKeypress, false);
 
   // list of objects
@@ -180,6 +182,7 @@ function frameUpdate(timestamp) {
       if (app.state === constants.STATE_PLAY) {
         if (detectCollision(o, app.hero)) {
           app.state = constants.STATE_END;
+          app.gameEnded = true;
           spawnExplosion(app.hero);
         }
       }
@@ -356,6 +359,11 @@ function spawnText(text, timer, relative) {
 }
 
 function spawnLaser() {
+  // no shooting when game's over
+  if (app.state === constants.STATE_END) {
+    return;
+  }
+
   // throttle rate of fire
   if (app.shotFired) {
     return;
@@ -452,8 +460,16 @@ function handleWindowResize(e) {
   scaleCanvas();
 }
 
+function handleDocumentKeyup(e) {
+  // reset flag that game has ended
+  if (app.state === constants.STATE_END && app.gameEnded) {
+    app.gameEnded = false;
+  }
+}
+
 function handleDocumentKeypress(e) {
-  if (app.state == constants.STATE_END) {
+  // don't restart game if it's ended and player is still holding key (likely spacebar)
+  if (app.state === constants.STATE_END && !app.gameEnded) {
     startGame();
   } else {
     if (e.keyCode === 32) {
