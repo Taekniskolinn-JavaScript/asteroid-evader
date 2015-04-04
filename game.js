@@ -1,15 +1,17 @@
 (function () {
 
-var app = {
-  state: 0,
-  score: 0,
-  difficulty: 0,
-  shotFired: false,
-
+var constants = {
   EXPLOSION_MAX_TIME: 2,
   TEXT_MAX_TIME: 1,
   STATE_PLAY: 1,
   STATE_END: 0
+};
+
+var app = {
+  state: 0,
+  score: 0,
+  difficulty: 0,
+  shotFired: false
 };
 
 //------------------------------
@@ -66,9 +68,9 @@ function startGame() {
   clearCanvas();
 
   // reset state
-  app.state = app.STATE_PLAY;
+  app.state = constants.STATE_PLAY;
   app.score = 0;
-  app.difficulty = 0
+  app.difficulty = 0;
 
   // list of objects
   app.objects = [];
@@ -94,7 +96,7 @@ function frameUpdate(timestamp) {
   app.lastTimeStamp = timestamp;
 
   // score
-  if (app.state === app.STATE_PLAY) {
+  if (app.state === constants.STATE_PLAY) {
     app.score += (dt * 10);
 
     // increase difficulty
@@ -125,7 +127,7 @@ function frameUpdate(timestamp) {
       }
 
       // detect collision
-      if (app.state === app.STATE_PLAY) {
+      if (app.state === constants.STATE_PLAY) {
         var j = app.objects.length;
         while (j--) {
           var e = app.objects[j];
@@ -133,11 +135,7 @@ function frameUpdate(timestamp) {
             continue;
           }
 
-          var dx = o.pos.x - e.pos.x;
-          var dy = o.pos.y - e.pos.y;
-          var dist = Math.sqrt(dx * dx * dy * dy);
-
-          if (dist < 50) {
+          if (detectCollision(o, e)) {
             app.score += 10;
             app.objects.splice(j, 1);
             app.objects.splice(i - 1, 1);
@@ -153,7 +151,7 @@ function frameUpdate(timestamp) {
     if (o.type === "explosion") {
       // update explosion timer
       o.timer += dt * o.speed;
-      if (o.timer > app.EXPLOSION_MAX_TIME) {
+      if (o.timer > constants.EXPLOSION_MAX_TIME) {
         app.objects.splice(i, 1);
       }
     }
@@ -161,7 +159,7 @@ function frameUpdate(timestamp) {
     if (o.type === "text") {
       // update text timer
       o.timer += dt;
-      if (o.timer > app.TEXT_MAX_TIME) {
+      if (o.timer > constants.TEXT_MAX_TIME) {
         app.objects.splice(i, 1);
       }
     }
@@ -179,13 +177,9 @@ function frameUpdate(timestamp) {
       }
 
       // collision detection
-      if (app.state === app.STATE_PLAY) {
-        var dx = o.pos.x - app.hero.pos.x;
-        var dy = o.pos.y - app.hero.pos.y;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist < 80) {
-          app.state = app.STATE_END;
+      if (app.state === constants.STATE_PLAY) {
+        if (detectCollision(o, app.hero)) {
+          app.state = constants.STATE_END;
           spawnExplosion(app.hero);
         }
       }
@@ -196,13 +190,20 @@ function frameUpdate(timestamp) {
   drawScene();
 
   // draw intro/game over
-  if (app.state === app.STATE_END) {
+  if (app.state === constants.STATE_END) {
     if (app.score === 0) {
       drawIntro();
     } else {
       drawGameOver();
     }
   }
+}
+
+function detectCollision(a, b) {
+  var dx = a.pos.x - b.pos.x;
+  var dy = a.pos.y - b.pos.y;
+  var dist = Math.sqrt(dx * dx + dy * dy);
+  return dist < 50;
 }
 
 //------------------------------
@@ -260,7 +261,7 @@ function drawScene() {
   for (var i=0; i<app.objects.length; i++) {
     var o = app.objects[i];
 
-    if (o.type === "hero" && app.state !== app.STATE_PLAY) {
+    if (o.type === "hero" && app.state !== constants.STATE_PLAY) {
       continue;
     }
 
@@ -273,7 +274,7 @@ function drawScene() {
       ctx.fill();
       ctx.closePath();
     } else if (o.type === "text") {
-      ctx.globalAlpha = 1 - (o.timer / app.TEXT_MAX_TIME);
+      ctx.globalAlpha = 1 - (o.timer / constants.TEXT_MAX_TIME);
       ctx.textAlign = "center";
       ctx.fillStyle = "#00ffff";
       ctx.font = "20px Calibri";
@@ -317,7 +318,7 @@ function drawScene() {
 function spawnExplosion(relative, speed, volume) {
   app.objects.push({
     type: "explosion",
-    alpha: function () { return 1 - (this.timer / app.EXPLOSION_MAX_TIME); },
+    alpha: function () { return 1 - (this.timer / constants.EXPLOSION_MAX_TIME); },
     timer: 0.1,
     pos: {x: relative.pos.x - (relative.size/2), y: relative.pos.y - (relative.size/2)},
     size: relative.size,
@@ -439,7 +440,7 @@ function scaleCanvas() {
 //------------------------------
 
 function handleMouseMove(e) {
-  if (app.state !== app.STATE_PLAY) {
+  if (app.state !== constants.STATE_PLAY) {
     return;
   }
 
@@ -452,7 +453,7 @@ function handleWindowResize(e) {
 }
 
 function handleDocumentKeypress(e) {
-  if (app.state == app.STATE_END) {
+  if (app.state == constants.STATE_END) {
     startGame();
   } else {
     if (e.keyCode === 32) {
