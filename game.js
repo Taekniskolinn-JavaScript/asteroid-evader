@@ -10,6 +10,10 @@ var app = {
   STATE_END: 0
 };
 
+//------------------------------
+// Game Core
+//------------------------------
+
 (function initGame() {
   var canvas = document.getElementById("canvas");
   app.ctx = canvas.getContext("2d");
@@ -37,6 +41,7 @@ var app = {
 
   app.themesongSound = new Audio();
   app.themesongSound.src = "audio/gunman.wav"; // http://www.playonloop.com/2012-music-loops/gunman/
+  app.themesongSound.volume = 0.75;
   app.themesongSound.loop = true;
   app.themesongSound.play();
 
@@ -70,34 +75,6 @@ function startGame() {
   spawnHero();
   spawnStars();
   spawnAllRocks();
-}
-
-function playSound(which) {
-  var sound = app[which + "Sound"];
-  if (sound) {
-    sound.pause();
-    sound.currentTime = 0;
-    sound.play();
-  }
-}
-
-function playExplosionSound() {
-  playSound("explosion");
-}
-
-function playLaserSound() {
-  playSound("laser");
-}
-
-function clearCanvas() {
-  var ctx = app.ctx;
-  ctx.fillStyle = "#000020";
-  ctx.fillRect(0, 0, app.width, app.height);
-}
-
-function scaleCanvas() {
-  app.width = app.ctx.canvas.width = window.innerWidth;
-  app.height = app.ctx.canvas.height = window.innerHeight;
 }
 
 function animationLoop() {
@@ -164,7 +141,7 @@ function frameUpdate(timestamp) {
           if (dist < 50) {
             app.objects.splice(j, 1);
             app.objects.splice(i - 1, 1);
-            spawnExplosion(e, 5);
+            spawnExplosion(e, 5, 0.5);
             spawnRock();
             break;
           }
@@ -210,6 +187,10 @@ function frameUpdate(timestamp) {
     }
   }
 }
+
+//------------------------------
+// Drawing Routines
+//------------------------------
 
 function drawIntro() {
   var ctx = app.ctx;
@@ -292,11 +273,15 @@ function drawScene() {
     ctx.textAlign = "center";
     ctx.fillStyle = "#fff";
     ctx.font = "italic 30px Calibri";
-    ctx.fillText("Score " + Math.floor(app.score), app.width/2, 30);
+    ctx.fillText("Score " + Math.floor(app.score), app.width/2, 50);
   }
 }
 
-function spawnExplosion(relative, speed) {
+//------------------------------
+// Object Spawning
+//------------------------------
+
+function spawnExplosion(relative, speed, volume) {
   app.explosion = {
     timer: 0.1,
     pos: relative.pos,
@@ -304,7 +289,7 @@ function spawnExplosion(relative, speed) {
     speed: speed || 1,
     image: app.explosionImage
   };
-  playExplosionSound();
+  playSound("explosion", volume);
 }
 
 function spawnStars() {
@@ -335,7 +320,7 @@ function spawnLaser() {
     size: 80,
     image: app.laserImage
   });
-  playLaserSound();
+  playSound("laser");
 }
 
 function spawnHero() {
@@ -368,6 +353,39 @@ function spawnAllRocks() {
     spawnRock();
   }
 }
+
+//------------------------------
+// Play Sounds
+//------------------------------
+
+function playSound(which, volume) {
+  var sound = app[which + "Sound"];
+  if (sound) {
+    sound.pause();
+    sound.volume = volume || 1;
+    sound.currentTime = 0;
+    sound.play();
+  }
+}
+
+//------------------------------
+// Canvas Helpers
+//------------------------------
+
+function clearCanvas() {
+  var ctx = app.ctx;
+  ctx.fillStyle = "#000020";
+  ctx.fillRect(0, 0, app.width, app.height);
+}
+
+function scaleCanvas() {
+  app.width = app.ctx.canvas.width = window.innerWidth;
+  app.height = app.ctx.canvas.height = window.innerHeight;
+}
+
+//------------------------------
+// Event Handlers
+//------------------------------
 
 function handleMouseMove(e) {
   if (app.state !== app.STATE_PLAY) {
