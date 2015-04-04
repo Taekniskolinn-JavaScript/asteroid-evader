@@ -3,6 +3,7 @@
 var app = {
   state: 0,
   score: 0,
+  difficulty: 0,
   shotFired: false,
 
   EXPLOSION_MAX_TIME: 2,
@@ -67,6 +68,7 @@ function startGame() {
   // reset state
   app.state = app.STATE_PLAY;
   app.score = 0;
+  app.difficulty = 0
 
   // list of objects
   app.objects = [];
@@ -94,6 +96,12 @@ function frameUpdate(timestamp) {
   // score
   if (app.state === app.STATE_PLAY) {
     app.score += (dt * 10);
+
+    // increase difficulty
+    if (Math.floor(app.score / 100) > app.difficulty) {
+      app.difficulty++;
+      spawnRock();
+    }
   }
 
   // object update loop
@@ -347,6 +355,7 @@ function spawnText(text, timer, relative) {
 }
 
 function spawnLaser() {
+  // throttle rate of fire
   if (app.shotFired) {
     return;
   } else {
@@ -391,8 +400,7 @@ function spawnRock() {
 }
 
 function spawnAllRocks() {
-  var count = Math.round(app.width / 100);
-  for (var i=0; i<count; i++) {
+  for (var i=0; i<10; i++) {
     spawnRock();
   }
 }
