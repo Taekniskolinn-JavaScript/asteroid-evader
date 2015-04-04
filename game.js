@@ -46,7 +46,6 @@ var app = {
 
   app.themesongSound = new Audio();
   app.themesongSound.src = "audio/gunman.wav"; // http://www.playonloop.com/2012-music-loops/gunman/
-  app.themesongSound.volume = 0.75;
   app.themesongSound.loop = true;
   app.themesongSound.play();
 
