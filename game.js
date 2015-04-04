@@ -29,6 +29,9 @@ var app = {
   app.explosionImage = new Image();
   app.explosionImage.src = "images/explosion.png"; // http://dbszabo1.deviantart.com/art/misc-explosion-element-png-309933232
   
+  app.laserSound = new Audio();
+  app.laserSound.src = "audio/laser.wav"; // https://www.freesound.org/people/Julien%20Matthey/sounds/268344/
+  
   app.explosionSound = new Audio();
   app.explosionSound.src = "audio/explosion.wav"; // https://www.freesound.org/people/ryansnook/sounds/110113/
 
@@ -69,10 +72,21 @@ function startGame() {
   spawnAllRocks();
 }
 
+function playSound(which) {
+  var sound = app[which + "Sound"];
+  if (sound) {
+    sound.pause();
+    sound.currentTime = 0;
+    sound.play();
+  }
+}
+
 function playExplosionSound() {
-  app.explosionSound.pause();
-  app.explosionSound.currentTime = 0;
-  app.explosionSound.play();
+  playSound("explosion");
+}
+
+function playLaserSound() {
+  playSound("laser");
 }
 
 function clearCanvas() {
@@ -321,6 +335,7 @@ function spawnLaser() {
     size: 80,
     image: app.laserImage
   });
+  playLaserSound();
 }
 
 function spawnHero() {
