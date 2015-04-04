@@ -207,11 +207,17 @@ function drawIntro() {
   ctx.font = "20px Calibri";
   ctx.fillText("Use mouse to navigate ship through asteroid field", app.width/2, app.height/2);
 
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#fff";
+  ctx.font = "20px Calibri";
+  ctx.fillText("Press spacebar to shoot lasers ", app.width/2, app.height/2+25);
+
+
   // draw start
   ctx.textAlign = "center";
   ctx.fillStyle = "#fff";
   ctx.font = "italic 20px Calibri";
-  ctx.fillText("(press any key to play)", app.width/2, app.height/2+50);
+  ctx.fillText("(press any key to play)", app.width/2, app.height/2+75);
 }
 
 function drawGameOver() {
