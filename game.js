@@ -12,7 +12,8 @@ var app = {
   score: 0,
   difficulty: 0,
   shotFired: false,
-  gameEnded: false
+  gameEnded: false,
+  keyDown: false
 };
 
 //------------------------------
@@ -181,7 +182,12 @@ function frameUpdate(timestamp) {
       if (app.state === constants.STATE_PLAY) {
         if (detectCollision(o, app.hero)) {
           app.state = constants.STATE_END;
-          app.gameEnded = true;
+          // this prevents player from having to press key
+          // twice to start game if they weren't holding key
+          // down when the game ended
+          if (app.keyDown) {
+            app.gameEnded = true;
+          }
           spawnExplosion(app.hero);
         }
       }
@@ -460,6 +466,9 @@ function handleWindowResize(e) {
 }
 
 function handleDocumentKeyup(e) {
+  // flag that key is up
+  app.keyDown = false;
+
   // reset flag that game has ended
   if (app.state === constants.STATE_END && app.gameEnded) {
     app.gameEnded = false;
@@ -467,6 +476,9 @@ function handleDocumentKeyup(e) {
 }
 
 function handleDocumentKeypress(e) {
+  // flag that key is down
+  app.keyDown = true;
+
   // don't restart game if it's ended and player is still holding key (likely spacebar)
   if (app.state === constants.STATE_END && !app.gameEnded) {
     startGame();
