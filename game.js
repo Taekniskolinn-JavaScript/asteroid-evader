@@ -495,7 +495,7 @@ function handleDocumentKeypress(e) {
   if (app.state === constants.STATE_END && !app.gameEnded) {
     startGame();
   } else {
-    if (e.keyCode === 32) {
+    if (e.which === 32) {
       spawnLaser();
     }
   }
