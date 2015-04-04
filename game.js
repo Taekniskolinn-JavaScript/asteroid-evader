@@ -3,7 +3,6 @@
 var app = {
   state: 0,
   score: 0,
-  explosion: null,
   shotFired: false,
 
   EXPLOSION_MAX_TIME: 2,
@@ -68,7 +67,6 @@ function startGame() {
   // reset state
   app.state = app.STATE_PLAY;
   app.score = 0;
-  app.explosion = null;
 
   // list of objects
   app.objects = [];
@@ -96,15 +94,6 @@ function frameUpdate(timestamp) {
   // score
   if (app.state === app.STATE_PLAY) {
     app.score += (dt * 10);
-  }
-
-  // explosion timer
-  if (app.explosion) {
-    app.explosion.timer += dt * app.explosion.speed;
-
-    if (app.explosion.timer > app.EXPLOSION_MAX_TIME) {
-      app.explosion = null;
-    }
   }
 
   // object update loop
@@ -153,7 +142,16 @@ function frameUpdate(timestamp) {
       }
     }
 
+    if (o.type === "explosion") {
+      // update explosion timer
+      o.timer += dt * o.speed;
+      if (o.timer > app.EXPLOSION_MAX_TIME) {
+        app.objects.splice(i, 1);
+      }
+    }
+
     if (o.type === "text") {
+      // update text timer
       o.timer += dt;
       if (o.timer > app.TEXT_MAX_TIME) {
         app.objects.splice(i, 1);
@@ -250,15 +248,6 @@ function drawScene() {
 
   var ctx = app.ctx;
 
-  // draw the explosion
-  if (app.explosion) {
-    ctx.save();
-      ctx.globalAlpha = 1 - (app.explosion.timer / app.EXPLOSION_MAX_TIME);
-      ctx.translate(app.explosion.pos.x, app.explosion.pos.y);
-      ctx.drawImage(app.explosion.image, -app.explosion.size/2, -app.explosion.size/2, app.explosion.size*2, app.explosion.size*2);
-    ctx.restore();
-  }
-
   // draw all objects
   for (var i=0; i<app.objects.length; i++) {
     var o = app.objects[i];
@@ -282,9 +271,24 @@ function drawScene() {
       ctx.font = "20px Calibri";
       ctx.fillText(o.text, o.pos.x, o.pos.y);
     } else {
+      if (o.alpha) {
+        var alpha;
+        if (typeof o.alpha === "function") {
+          alhpa = o.alpha();
+        } else {
+          alpha = o.alpha;
+        }
+        ctx.globalAlpha = alpha;
+      }
+      
+      var factor = 1;
+      if (o.type === "explosion") {
+        factor = 2;
+      }
+
       ctx.translate(o.pos.x, o.pos.y);
       ctx.rotate(o.angle);
-      ctx.drawImage(o.image, -o.size/2, -o.size/2, o.size, o.size);
+      ctx.drawImage(o.image, -o.size/2, -o.size/2, o.size * factor, o.size * factor);
     }
     ctx.restore();
   }
@@ -303,13 +307,15 @@ function drawScene() {
 //------------------------------
 
 function spawnExplosion(relative, speed, volume) {
-  app.explosion = {
+  app.objects.push({
+    type: "explosion",
+    alpha: function () { return 1 - (this.timer / app.EXPLOSION_MAX_TIME); },
     timer: 0.1,
     pos: {x: relative.pos.x - (relative.size/2), y: relative.pos.y - (relative.size/2)},
     size: relative.size,
     speed: speed || 1,
     image: app.explosionImage
-  };
+  });
   playSound("explosion", volume);
 }
 
