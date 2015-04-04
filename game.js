@@ -3,7 +3,7 @@
 var app = {
   state: 0,
   score: 0,
-  explosionTimer: 0,
+  explosion: null,
 
   EXPLOSION_MAX_TIME: 2,
   STATE_PLAY: 1,
@@ -19,6 +19,9 @@ var app = {
   // load assets
   app.shipImage = new Image();
   app.shipImage.src = "images/ship.png"; // http://www.over00.com/index.php/archives/1844
+
+  app.laserImage = new Image();
+  app.laserImage.src = "images/laser.png"; //http://opengameart.org/content/lasers-and-beams
 
   app.rockImage = new Image();
   app.rockImage.src = "images/rock.png"; // http://www.zimnox.com/resources/textures/
@@ -55,9 +58,7 @@ function startGame() {
   // reset state
   app.state = app.STATE_PLAY;
   app.score = 0;
-  app.explosionTimer = 0;
-  app.explosionSound.pause();
-  app.explosionSound.currentTime = 0;
+  app.explosion = null;
 
   // list of objects
   app.objects = [];
@@ -66,6 +67,12 @@ function startGame() {
   spawnHero();
   spawnStars();
   spawnAllRocks();
+}
+
+function playExplosionSound() {
+  app.explosionSound.pause();
+  app.explosionSound.currentTime = 0;
+  app.explosionSound.play();
 }
 
 function clearCanvas() {
@@ -99,11 +106,11 @@ function frameUpdate(timestamp) {
   }
 
   // explosion timer
-  if (app.explosionTimer > 0) {
-    app.explosionTimer += dt;
+  if (app.explosion) {
+    app.explosion.timer += dt * app.explosion.speed;
 
-    if (app.explosionTimer > app.EXPLOSION_MAX_TIME) {
-      app.explosionTimer = 0;
+    if (app.explosion.timer > app.EXPLOSION_MAX_TIME) {
+      app.explosion = null;
     }
   }
 
@@ -114,6 +121,41 @@ function frameUpdate(timestamp) {
 
     if (o.roll) {
       o.angle += o.roll * dt;
+    }
+
+    if (o.type === "laser") {
+      // move laser
+      if (o.speed) {
+        o.pos.y -= o.speed * dt;
+      }
+
+      // check for laser off the top
+      if (o.pos.y + o.size < 0) {
+        app.objects.splice(i, 1);
+      }
+
+      // detect collision
+      if (app.state === app.STATE_PLAY) {
+        var j = app.objects.length;
+        while (j--) {
+          var e = app.objects[j];
+          if (e.type !== "rock") {
+            continue;
+          }
+
+          var dx = o.pos.x - e.pos.x;
+          var dy = o.pos.y - e.pos.y;
+          var dist = Math.sqrt(dx * dx * dy * dy);
+
+          if (dist < 50) {
+            app.objects.splice(j, 1);
+            app.objects.splice(i - 1, 1);
+            spawnExplosion(e, 5);
+            spawnRock();
+            break;
+          }
+        }
+      }
     }
 
     if (o.type === "rock") {
@@ -136,8 +178,7 @@ function frameUpdate(timestamp) {
         
         if (dist < 80) {
           app.state = app.STATE_END;
-          app.explosionTimer = 0.1;
-          app.explosionSound.play();
+          spawnExplosion(app.hero);
         }
       }
     }
@@ -198,13 +239,13 @@ function drawScene() {
   var ctx = app.ctx;
 
   // draw the explosion
-  if (app.explosionTimer > 0) {
-    var interp = app.explosionTimer / app.EXPLOSION_MAX_TIME;
+  if (app.explosion) {
+    var interp = app.explosion.timer / app.EXPLOSION_MAX_TIME;
 
     ctx.save();
       ctx.globalAlpha = 1 - interp;
-      ctx.translate(app.hero.pos.x, app.hero.pos.y);
-      ctx.drawImage(app.explosionImage, -app.hero.size/2, -app.hero.size/2, 150, 150);
+      ctx.translate(app.explosion.pos.x, app.explosion.pos.y);
+      ctx.drawImage(app.explosion.image, -app.explosion.size, -app.explosion.size, 150, 150);
     ctx.restore();
   }
 
@@ -241,6 +282,17 @@ function drawScene() {
   }
 }
 
+function spawnExplosion(relative, speed) {
+  app.explosion = {
+    timer: 0.1,
+    pos: relative.pos,
+    size: relative.size/2,
+    speed: speed || 1,
+    image: app.explosionImage
+  };
+  playExplosionSound();
+}
+
 function spawnStars() {
   // http://codepen.io/iblamefish/pen/xgefG?editors=001
   var STAR_COLOURS = ["#ffffff", "#ffe9c4", "#d4fbff"];
@@ -257,6 +309,18 @@ function spawnStars() {
       color: STAR_COLOURS[random(0, STAR_COLOURS.length)]
     });
   }
+}
+
+function spawnLaser() {
+  app.objects.push({
+    type: "laser",
+    pos: {x:app.hero.pos.x, y:app.hero.pos.y - 60},
+    roll: 0,
+    angle: 0,
+    speed: 500,
+    size: 80,
+    image: app.laserImage
+  });
 }
 
 function spawnHero() {
@@ -306,6 +370,10 @@ function handleWindowResize(e) {
 function handleDocumentKeypress(e) {
   if (app.state == app.STATE_END) {
     startGame();
+  } else {
+    if (e.keyCode === 32) {
+      spawnLaser();
+    }
   }
 }
 
