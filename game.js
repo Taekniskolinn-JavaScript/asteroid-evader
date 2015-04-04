@@ -39,6 +39,12 @@ var app = {
   window.addEventListener("resize", handleWindowResize, false);
   document.addEventListener("keypress", handleDocumentKeypress, false);
 
+  // list of objects
+  app.objects = [];
+
+  // create stars
+  spawnStars();
+
   // animation loop
   animationLoop();
 })();
@@ -79,12 +85,7 @@ function animationLoop() {
 
 function frameUpdate(timestamp) {
   animationLoop();
-
-  if (app.state === app.STATE_END && app.score === 0) {
-    drawIntro();
-    return;
-  }
-
+ 
   // delta time calculation
   if (!app.lastTimeStamp) {
     app.lastTimeStamp = timestamp;
@@ -142,18 +143,20 @@ function frameUpdate(timestamp) {
     }
   }
 
-  // redraw everything
+  // redraw everything 
   drawScene();
 
-  // draw game over
+  // draw intro/game over
   if (app.state === app.STATE_END) {
-    drawGameOver();
+    if (app.score === 0) {
+      drawIntro();
+    } else {
+      drawGameOver();
+    }
   }
 }
 
 function drawIntro() {
-  clearCanvas();
-
   var ctx = app.ctx;
 
   // draw name
@@ -230,10 +233,12 @@ function drawScene() {
   }
 
   // draw score
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#fff";
-  ctx.font = "italic 30px Calibri";
-  ctx.fillText("Score " + Math.floor(app.score), app.width/2, 30);
+  if (app.score > 0) {
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.font = "italic 30px Calibri";
+    ctx.fillText("Score " + Math.floor(app.score), app.width/2, 30);
+  }
 }
 
 function spawnStars() {
