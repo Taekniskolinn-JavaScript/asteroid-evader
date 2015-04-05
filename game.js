@@ -158,7 +158,7 @@ function frameUpdate(timestamp) {
           }
 
           if (detectCollision(o, e, 50)) {
-            app.score += 10;
+            app.score += e.points;
             app.objects.splice(j, 1);
             app.objects.splice(i - 1, 1);
             spawnExplosion(e, 5, 0.5);
