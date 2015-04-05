@@ -20,7 +20,8 @@ var constants = {
   EXPLOSION_MAX_TIME: 2,
   TEXT_MAX_TIME: 1,
   STATE_PLAY: 1,
-  STATE_END: 0
+  STATE_END: 0,
+  ROCK_SIZES: [50, 100]
 };
 
 var app = {
@@ -45,8 +46,14 @@ var app = {
   app.laserImage = new Image();
   app.laserImage.src = "images/laser.png"; //http://opengameart.org/content/lasers-and-beams
 
-  app.rockImage = new Image();
-  app.rockImage.src = "images/rock.png"; // http://www.zimnox.com/resources/textures/
+  app.rockImage1 = new Image();
+  app.rockImage1.src = "images/rock1.png"; // http://www.zimnox.com/resources/textures/
+
+  app.rockImage2 = new Image();
+  app.rockImage2.src = "images/rock2.png"; // http://www.zimnox.com/resources/textures/
+
+  app.rockImage3 = new Image();
+  app.rockImage3.src = "images/rock3.png"; // http://www.zimnox.com/resources/textures/
 
   app.explosionImage = new Image();
   app.explosionImage.src = "images/explosion.png"; // http://dbszabo1.deviantart.com/art/misc-explosion-element-png-309933232
@@ -70,6 +77,7 @@ var app = {
 
   // list of objects
   app.objects = [];
+  app.asteroids = [app.rockImage1, app.rockImage2, app.rockImage3];
 
   // create stars
   spawnStars();
@@ -154,7 +162,7 @@ function frameUpdate(timestamp) {
             app.objects.splice(j, 1);
             app.objects.splice(i - 1, 1);
             spawnExplosion(e, 5, 0.5);
-            spawnText("+10", dt, e);
+            spawnText("+" + e.points, dt, e);
             spawnRock();
             break;
           }
@@ -327,7 +335,7 @@ function drawScene() {
     ctx.textAlign = "center";
     ctx.fillStyle = "#fff";
     ctx.font = "italic 30px Calibri";
-    ctx.fillText("Score " + Math.floor(app.score), app.width/2, 50);
+    ctx.fillText("Score " + formatNumber(Math.floor(app.score)), app.width/2, 50);
   }
 }
 
@@ -414,14 +422,19 @@ function spawnHero() {
 }
 
 function spawnRock() {
+  var size = constants.ROCK_SIZES[Math.floor(Math.random() * constants.ROCK_SIZES.length)];
+  var points = size / 10;
+  var image = app.asteroids[Math.floor(Math.random() * app.asteroids.length)];
+
   app.objects.push({
     type: "rock",
     pos: {x:Math.random() * app.width, y:Math.random() * -app.height},
     angle: Math.random() * Math.PI * 2,
     roll: Math.random() * Math.PI * 2 - Math.PI,
     speed: Math.random() * 150 + 100,
-    size: 90,
-    image: app.rockImage
+    size: size,
+    points: points,
+    image: image
   });
 }
 
@@ -505,4 +518,26 @@ function handleShotFiredTimeout() {
   app.shotFired = false;
 }
 
+//------------------------------
+// Utilities
+//------------------------------
+
+function formatNumber(num) {
+  var parts = String(num).split("");
+  var formatted = "";
+  
+  var i = parts.length;
+  var count = 0;
+  while (i--) {
+    formatted += parts[i];
+    if (++count === 3 && i !== 0) {
+      formatted += ",";
+      count = 0;
+    }
+  }
+
+  return formatted.split("").reverse().join("");
+}
+
 })();
+
