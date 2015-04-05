@@ -157,7 +157,7 @@ function frameUpdate(timestamp) {
             continue;
           }
 
-          if (detectCollision(o, e)) {
+          if (detectCollision(o, e, 50)) {
             app.score += 10;
             app.objects.splice(j, 1);
             app.objects.splice(i - 1, 1);
@@ -200,7 +200,7 @@ function frameUpdate(timestamp) {
 
       // collision detection
       if (app.state === constants.STATE_PLAY) {
-        if (detectCollision(o, app.hero)) {
+        if (detectCollision(o, app.hero, 80)) {
           app.state = constants.STATE_END;
           // this prevents player from having to press key
           // twice to start game if they weren't holding key
@@ -227,11 +227,11 @@ function frameUpdate(timestamp) {
   }
 }
 
-function detectCollision(a, b) {
+function detectCollision(a, b, d) {
   var dx = a.pos.x - b.pos.x;
   var dy = a.pos.y - b.pos.y;
   var dist = Math.sqrt(dx * dx + dy * dy);
-  return dist < 50;
+  return dist < d;
 }
 
 //------------------------------
