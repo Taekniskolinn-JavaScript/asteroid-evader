@@ -1,1 +1,1 @@
-require('lib/game');
+require('./lib/game');

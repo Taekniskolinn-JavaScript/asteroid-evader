@@ -2,56 +2,12 @@
 <html>
 <head>
 <title>Asteroid Evader</title>
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: #000020;
-  }
-
-  canvas {
-    cursor: none;
-    margin: 0 auto;
-    display: block;
-  }
-
-  #overlay {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: rgba(0, 0, 0, .5);
-  }
-
-  #modal {
-    box-sizing: border-box;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 350px;
-    height: 350px;
-    margin-top: -175px;
-    margin-left: -175px;
-    padding: 10px;
-    background: #999;
-  }
-</style>
+<link rel="stylesheet" type="text/css" href="assets/css/styles.css"/>
 </head>
 <body>
 <canvas id="canvas" width="800" height="600">
   Your browser isn't compatible
 </canvas>
-<!-- <div id="overlay"> -->
-<!--   <div id="modal"> -->
-<!--     <form> -->
-<!--       Email: <input type="email"/><br/> -->
-<!--       Name: <input type="text"/><br/> -->
-<!--       <button type="submit">Submit</button> -->
-<!--     </form> -->
-<!--   </div> -->
-<!-- </div> -->
-<script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
-<script src="game.js"></script>
+<script src="bundle.js"></script>
 </body>
 </html>
